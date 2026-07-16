@@ -7,8 +7,8 @@ spec:
     namespace: argocd
     server: https://kubernetes.default.svc
   source:
-    path: argocd/applications
-    repoURL: https://github.com/rs235/gitops
+    path: clusters/home
+    repoURL: https://github.com/rs235/gitops.git
     targetRevision: main
   sources: []
   project: default

@@ -3,4 +3,7 @@ grafana:
 
 prometheus:
   prometheusSpec:
-    retention: 30d
+    retention: 15d
+
+alertmanager:
+  enabled: true

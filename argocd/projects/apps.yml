@@ -9,14 +9,22 @@ spec:
   description: Applications
 
   sourceRepos:
-    - https://github.com/rs235/gitops
+    - https://github.com/rs235/gitops.git
 
   destinations:
     - namespace: apps-*
       server: https://kubernetes.default.svc
 
+  clusterResourceWhitelist: []
+
   namespaceResourceWhitelist:
-    - group: apps
-      kind: Deployment
-    - group: ""
-      kind: Service
+    - group: "*"
+      kind: "*"
+
+syncPolicy:
+  automated:
+    prune: true
+    selfHeal: true
+
+  syncOptions:
+    - CreateNamespace=true
