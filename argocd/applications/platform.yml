@@ -1,0 +1,8 @@
+kind: Application
+
+metadata:
+  name: platform
+
+spec:
+  source:
+    path: platform/

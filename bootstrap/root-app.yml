@@ -1,0 +1,7 @@
+kind: Application
+metadata:
+  name: root
+spec:
+  source:
+    repoURL: https://github.com/rs235/gitops
+    path: argocd/applications
