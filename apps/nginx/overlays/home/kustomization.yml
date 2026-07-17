@@ -8,4 +8,4 @@ namespace: apps
 
 replicas:
   - name: nginx
-    count: 6
+    count: 3
