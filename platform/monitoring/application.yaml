@@ -3,13 +3,8 @@ kind: Application
 metadata:
   name: kube-prometheus-stack
   namespace: argocd
-
 spec:
   project: platform
-
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: monitoring
 
   sources:
     - repoURL: https://prometheus-community.github.io/helm-charts
@@ -18,18 +13,20 @@ spec:
       helm:
         releaseName: kube-prometheus-stack
         valueFiles:
-          - $values/platform/monitoring/values.yml
+          - $values/platform/monitoring/values.yaml
 
     - repoURL: https://github.com/rs235/gitops.git
       targetRevision: main
       ref: values
 
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-      - Replace=false

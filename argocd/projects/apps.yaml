@@ -1,24 +1,21 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
-
 metadata:
-  name: platform
+  name: apps
   namespace: argocd
-
 spec:
-  description: Platform services
+  description: User workloads
 
   sourceRepos:
     - https://github.com/rs235/gitops.git
-    - https://prometheus-community.github.io/helm-charts
 
   destinations:
-    - namespace: "*"
+    - namespace: apps
       server: https://kubernetes.default.svc
 
   clusterResourceWhitelist:
-    - group: "*"
-      kind: "*"
+    - group: ""
+      kind: Namespace
 
   namespaceResourceWhitelist:
     - group: "*"
