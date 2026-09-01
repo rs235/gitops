@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+
+metadata:
+  name: apps
+  namespace: argocd
+
+spec:
+  description: Application workloads
+
+  sourceRepos:
+    - https://github.com/rs235/gitops.git
+
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: apps
+
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+      name: apps
+
+  namespaceResourceWhitelist:
+    - group: "*" # Kubernetes API group. Not namespace.
+      kind: "*"
