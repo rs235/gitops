@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1 # Argo CDA API version for Application object.
+kind: Application # K8s object type. In this case ArgoCD Application.
+metadata: # Description of the ArgoCD Application object.
+  name: root-app # Name of the ArgoCD application object.
+  namespace: argocd # K8s namespace for ArgoCD application object.
+
+spec: # ArgoCD Application specification.
+  project: default # ArgoCD project name for this app.
+
+  source: # Source of configuration.
+    repoURL: https://github.com/rs235/gitops.git # Repo url.
+    targetRevision: main # Repo branch.
+    path: clusters/home # Path in the repo containing Application manifest.
+
+  destination: # Destination cluster.
+    server: https://kubernetes.default.svc # Destination cluster API server address.
+    namespace: argocd # K8s namespace for the App of Apps deployment. This is not workload so it goes into argocd.
+
+  syncPolicy: # ArgoCD sync policy definition.
+    automated: # Sync policy type.
+      prune: true # Remove resources managed by this Application automatically if they are removed from the repo.
+      selfHeal: true # Manual changes to running app are overwritten with what's in the repo.
+    syncOptions: # Additional sync policy options.
+      - CreateNamespace=true # Creates K8s namespace defined in this manifest if it doesn't exist.
