@@ -18,7 +18,6 @@ spec:
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
-      name: apps
 
   namespaceResourceWhitelist:
     - group: "*" # Kubernetes API group. Not namespace.
