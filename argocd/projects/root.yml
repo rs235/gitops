@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+
+metadata:
+  name: root
+  namespace: argocd
+
+spec:
+  description: Root app project
+
+  sourceRepos:
+    - https://github.com/rs235/gitops.git
+
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: argocd
+
+  namespaceResourceWhitelist:
+    - group: argoproj.io
+      kind: Application
