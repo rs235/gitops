@@ -3,12 +3,12 @@ kind: Kustomization
 
 resources:
   - nginx
-  - nginx2
+  - website
 
 namespace: apps
 
 replicas:
   - name: nginx
+    count: 1
+  - name: website
     count: 3
-  - name: nginx2
-    count: 6
