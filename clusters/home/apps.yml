@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1 # Argo CDA API version for Application object.
 kind: Application # K8s object type. In this case ArgoCD Application.
 metadata: # Description of the ArgoCD Application object.
-  name: nginx # Name of the ArgoCD application object.
+  name: apps # Name of the ArgoCD application object.
   namespace: argocd # K8s namespace for ArgoCD application object.
 
 spec: # ArgoCD Application specification.
