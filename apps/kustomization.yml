@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - nginx
+  - nginx2
 
 namespace: apps
 
