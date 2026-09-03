@@ -10,7 +10,7 @@ spec: # ArgoCD Application specification.
   source: # Source of configuration.
     repoURL: https://github.com/rs235/gitops.git # Repo url.
     targetRevision: main # Repo branch.
-    path: apps/nginx # Path in the repo containing app manifests.
+    path: apps # Path in the repo containing app manifests.
 
   destination: # Destination cluster.
     server: https://kubernetes.default.svc # Destination cluster API server address.

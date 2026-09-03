@@ -9,7 +9,7 @@ spec:
 
   source:
     repoURL: https://github.com/argoproj/argo-cd.git
-    targetRevision: v3.1.9
+    targetRevision: v3.5.2
     path: manifests/cluster-install
 
   destination:
