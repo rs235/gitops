@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
   - nginx
 
-namespace: apps
+namespace: website
 
 replicas:
   - name: nginx
