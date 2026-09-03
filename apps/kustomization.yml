@@ -10,3 +10,5 @@ namespace: apps
 replicas:
   - name: nginx
     count: 3
+  - name: nginx2
+    count: 6
