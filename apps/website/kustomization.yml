@@ -4,3 +4,13 @@ kind: Kustomization
 resources:
   - deployment.yml
   - service.yml
+
+namespace: website
+
+replicas:
+  - name: website
+    count: 3
+
+images:
+  - name: nginx
+    newTag: "1.31"
