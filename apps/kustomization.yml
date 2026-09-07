@@ -13,8 +13,6 @@ replicas:
   - name: website
     count: 3
 
-containers:
+images:
   - name: nginx
-    image: nginx:1.30
-  - name: website
-    image: nginx:1.31
+    newTag: "1.31"
