@@ -208,7 +208,7 @@ jobs:
             -ignore-filename-pattern kustomization\.ya?ml
             -ignore-filename-pattern values\.ya?ml
             -schema-location default
-            -schema-location /github/workspace/schemas/{{.ResourceKind}}{{.KindSuffix}}.json
+            -schema-location /github/workspace/schemas/{{.ResourceKind}}.json
             applications/
             bootstrap/
             clusters/
