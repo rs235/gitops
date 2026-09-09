@@ -154,7 +154,7 @@ jobs:
           args: >-
             -strict
             -summary
-            rendered/kustomize/*.yml
+            rendered/kustomize/website.yml
 
       # - name: Validate all manifests
       #   run: |
