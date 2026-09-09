@@ -198,6 +198,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
+      - name: Debug schemas
+        run: |
+          find schemas -type f -maxdepth 2 -print
+
       - name: Validate manifests
         uses: docker://ghcr.io/yannh/kubeconform:v0.8.0
         with:
