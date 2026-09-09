@@ -1,18 +1,14 @@
-# Kubernetes GitOps with Argo CD
+# Overview
 
-A small, production-style GitOps repository for managing Kubernetes workloads with Argo CD.
+GitOps repository for managing Kubernetes workloads with Argo CD. This repository is built around App of Apps concepts and support for multiple clusters while still keeping things simple and manageable. Security was a major concern with separation of platform components and application workloads and minimal permissions based on actual application needs.
 
-The repository is intentionally kept simple:
+This repository is a part of a bigger infrastructure as code project that uses:
 
-- **Terraform** provisions infrastructure.
-- **Kubespray** installs Kubernetes and the base cluster components.
-- **Argo CD** is installed as part of the cluster bootstrap.
-- **This repository** contains the desired Kubernetes state.
-- **Argo CD** continuously reconciles the cluster with Git.
-- **Kustomize** is used where per-cluster configuration is useful.
-- **Helm** is used for third-party applications such as kube-prometheus-stack.
-
-The design supports multiple clusters without introducing a complex ApplicationSet/template system.
+- **Terraform** to provision and manage infrastructure.
+- **Ansible** to configure VMs and execute Kubespray.
+- **Kubespray** to install Kubernetes and base cluster components.
+- **Argo CD** which is initially installed by Kubespray to deploy and manage cluster workloads.
+- **GitHub Actions** for CI/CD.
 
 ## Repository structure
 

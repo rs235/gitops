@@ -1,0 +1,12 @@
+checks:
+  include:
+    - "run-as-non-root"
+    - "privileged"
+    - "no-read-only-root-fs"
+    - "required-label"
+    - "resource-limits"
+    - "resource-requests"
+    - "non-existent-service-account"
+
+  exclude:
+    - "dangling-service"
