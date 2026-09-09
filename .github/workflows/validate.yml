@@ -154,7 +154,7 @@ jobs:
           args: >-
             -strict
             -summary
-            rendered/kustomize/website.yml
+            rendered/kustomize
 
       # - name: Validate all manifests
       #   run: |
@@ -205,6 +205,8 @@ jobs:
           args: >-
             -strict
             -summary
+            -ignore-filename-pattern '(^|/)kustomization\.ya?ml$'
+            -ignore-filename-pattern '(^|/)values\.ya?ml$'
             -schema-location default
             -schema-location 'schemas/{{.ResourceKind}}.json'
             applications/
