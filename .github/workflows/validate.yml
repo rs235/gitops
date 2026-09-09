@@ -180,11 +180,10 @@ jobs:
           path: rendered/kustomize
 
       - name: Run KubeLinter
-        # Pinned kube-linter-action uses kube-linter v.1.0.7
         uses: stackrox/kube-linter-action@87802a2f4e01abebb3ee3c67a3002fea71f6eae5
         with:
           directory: rendered
-          config: .kube-linter.yml
+          # config: .kube-linter.yml
 
   kubeconform-argocd:
     name: Argo CD Schema Validation
