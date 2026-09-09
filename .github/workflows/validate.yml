@@ -1,8 +1,9 @@
+---
 name: Validate
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
   workflow_dispatch:
 
@@ -140,7 +141,7 @@ jobs:
           path: rendered/kustomize
 
       - name: Validate manifests
-        # Uses official kubeconform Docker container with pinned tag. 
+        # Uses official kubeconform Docker container with pinned tag.
         uses: docker://ghcr.io/yannh/kubeconform:v0.8.0
         with:
           entrypoint: /kubeconform
@@ -157,32 +158,32 @@ jobs:
       #       rendered/**/*.yaml
 
   kube-linter:
-      name: KubeLinter
-      runs-on: ubuntu-latest
+    name: KubeLinter
+    runs-on: ubuntu-latest
 
-      needs:
-        # - helm-render
-        - kustomize-render
+    needs:
+    # - helm-render
+    - kustomize-render
 
-      steps:
-        # - name: Download Helm manifests
-        #   uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
-        #   with:
-        #     name: helm-rendered
-        #     path: rendered/helm
+    steps:
+    # - name: Download Helm manifests
+    #   uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+    #   with:
+    #     name: helm-rendered
+    #     path: rendered/helm
 
-        - name: Download Kustomize manifests
-          uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
-          with:
-            name: kustomize-rendered
-            path: rendered/kustomize
+    - name: Download Kustomize manifests
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+        name: kustomize-rendered
+        path: rendered/kustomize
 
-        - name: Run KubeLinter
-          # Pinned kube-linter-action uses kube-linter v.1.0.7
-          uses: stackrox/kube-linter-action@87802a2f4e01abebb3ee3c67a3002fea71f6eae5
-          with:
-            directory: rendered
-            config: .kube-linter.yaml
+    - name: Run KubeLinter
+        # Pinned kube-linter-action uses kube-linter v.1.0.7
+        uses: stackrox/kube-linter-action@87802a2f4e01abebb3ee3c67a3002fea71f6eae5
+        with:
+        directory: rendered
+        config: .kube-linter.yaml
 
   kubeconform-argocd:
     name: Argo CD Schema Validation

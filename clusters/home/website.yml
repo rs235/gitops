@@ -6,12 +6,12 @@ metadata:  # Description of the ArgoCD Application object.
   namespace: argocd  # K8s namespace for ArgoCD application object.
 
 spec:  # ArgoCD Application specification.
-  project: apps # ArgoCD project name for this app.
+  project: apps  # ArgoCD project name for this app.
 
   source:  # Source of configuration.
-    repoURL: https://github.com/rs235/gitops.git # Repo url.
-    targetRevision: main # Repo branch.
-    path: applications/workloads/website # Path in the repo containing app manifests.
+    repoURL: https://github.com/rs235/gitops.git  # Repo url.
+    targetRevision: main  # Repo branch.
+    path: applications/workloads/website  # Path in the repo containing app manifests.
 
   destination:  # Destination cluster.
     server: https://kubernetes.default.svc  # Destination cluster API server address.
