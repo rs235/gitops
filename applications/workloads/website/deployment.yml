@@ -27,7 +27,7 @@ spec:
                 topologyKey: kubernetes.io/hostname
                 labelSelector:
                   matchLabels:
-                    app: website
+                    app.kubernetes.io/name: website
 
       securityContext:
         runAsNonRoot: true
