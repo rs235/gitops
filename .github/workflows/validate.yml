@@ -208,7 +208,9 @@ jobs:
             -ignore-filename-pattern kustomization\.ya?ml
             -ignore-filename-pattern values\.ya?ml
             -schema-location default
-            -schema-location 'schemas/{{.ResourceKind}}.json'
+            -schema-location schemas/Application.json
+            -schema-location schemas/ApplicationSet.json
+            -schema-location schemas/AppProject.json
             applications/
             bootstrap/
             clusters/
