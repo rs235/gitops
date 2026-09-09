@@ -74,7 +74,7 @@ jobs:
 
       - name: Render manifests
         run: |
-          kubectl kustomize build applications/workloads/website > rendered/kustomize/website.yaml
+          kubectl kustomize build applications/workloads/website/kustomization.yml > rendered/kustomize/website.yaml
 
       - name: Upload rendered manifests
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -197,13 +197,13 @@ jobs:
         with:
           entrypoint: /kubeconform
           args: >-
-            -strict \
-            -summary \
-            -schema-location default \
-            -schema-location 'schemas/{{.ResourceKind}}{{.KindSuffix}}.json' \
-            applications/ \
-            bootstrap/ \
-            clusters/ \
+            -strict
+            -summary
+            -schema-location default
+            -schema-location 'schemas/{{.ResourceKind}}{{.KindSuffix}}.json'
+            applications/
+            bootstrap/
+            clusters/
             projects/
 
       # - name: Validate Argo CD Manifests
