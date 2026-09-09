@@ -147,8 +147,8 @@ jobs:
         with:
           entrypoint: /kubeconform
           args: >-
-            -strict \
-            -summary \
+            -strict
+            -summary
             rendered/kustomize/*.yaml
 
       # - name: Validate all manifests
