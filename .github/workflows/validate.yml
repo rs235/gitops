@@ -201,7 +201,7 @@ jobs:
             -strict
             -summary
             -schema-location default
-            -schema-location 'schemas/{{.ResourceKind}}{{.KindSuffix}}.json'
+            -schema-location 'schemas/{{.ResourceKind}}.json'
             applications/
             bootstrap/
             clusters/
@@ -213,7 +213,7 @@ jobs:
       #     -strict \
       #     -summary \
       #     -schema-location default \
-      #     -schema-location 'schemas/{{.ResourceKind}}{{.KindSuffix}}.json' \
+      #     -schema-location 'schemas/{{.ResourceKind}}.json' \
       #     applications/ \
       #     bootstrap/ \
       #     clusters/ \
