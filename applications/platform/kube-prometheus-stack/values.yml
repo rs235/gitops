@@ -1,3 +1,4 @@
+---
 grafana:
   enabled: true
   service:

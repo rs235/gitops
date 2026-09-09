@@ -1,3 +1,4 @@
+---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 
@@ -25,5 +26,5 @@ spec:
       kind: "*"
 
   namespaceResourceWhitelist:
-    - group: "*" # Kubernetes API group. Not namespace.
+    - group: "*"  # Kubernetes API group. Not namespace.
       kind: "*"
