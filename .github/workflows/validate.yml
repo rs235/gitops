@@ -66,70 +66,72 @@ jobs:
       - name: Set up kubectl
         uses: azure/setup-kubectl@829323503d1be3d00ca8346e5391ca0b07a9ab0d
         with:
-          version: 'v1.33.0'
+          # kubectl version aligned with server version.
+          version: 'v1.35.4'
 
       - name: Create directory
         run: mkdir -p rendered/kustomize
 
       - name: Render manifests
         run: |
-          kubectl kustomize build overlays/dev > rendered/kustomize/dev.yaml
-          kubectl kustomize build overlays/staging > rendered/kustomize/staging.yaml
-          kubectl kustomize build overlays/prod > rendered/kustomize/prod.yaml
+          kubectl kustomize build applications/workloads/website > rendered/kustomize/website.yaml
 
       - name: Upload rendered manifests
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: kustomize-rendered
           path: rendered/kustomize/
-
-  helm-render:
-    name: Helm Render
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-
-      - name: Setup Helm
-        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
-        with:
-          version: v3.19.0
-
-      - name: Lint chart
-        run: helm lint ./charts/my-app
-
-      - name: Create directory
-        run: mkdir -p rendered/helm
-
-      - name: Render Helm chart
-        run: |
-          helm template my-app ./charts/my-app \
-            --values ./charts/my-app/values.yaml \
-            > rendered/helm/my-app.yaml
-
-      - name: Upload rendered manifests
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: helm-rendered
-          path: rendered/helm/
           if-no-files-found: error
           retention-days: 1
 
-  kubeconform:
+  # helm-render:
+  #   name: Helm Render
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+  #     - name: Setup Helm
+  #       uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
+  #       with:
+  #         version: v3.21.4
+
+  #     - name: Lint chart
+  #       run: helm lint ./charts/my-app
+
+  #     - name: Create directory
+  #       run: mkdir -p rendered/helm
+
+  #     - name: Render Helm chart
+  #       run: |
+  #         helm template my-app ./charts/my-app \
+  #           --values ./charts/my-app/values.yaml \
+  #           > rendered/helm/my-app.yaml
+
+  #     - name: Upload rendered manifests
+  #       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+  #       with:
+  #         name: helm-rendered
+  #         path: rendered/helm/
+  #         if-no-files-found: error
+  #         retention-days: 1
+
+  kubeconform-k8s:
     name: Kubernetes Schema Validation
     runs-on: ubuntu-latest
 
     needs:
       - kustomize-render
-      - helm-render
+      # - helm-render
 
     steps:
-      - name: Download Helm manifests
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
-        with:
-          name: helm-rendered
-          path: rendered/helm
+
+      # - name: Download Helm manifests
+      #   uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+      #   with:
+      #     name: helm-rendered
+      #     path: rendered/helm
 
       - name: Download Kustomize manifests
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -137,27 +139,37 @@ jobs:
           name: kustomize-rendered
           path: rendered/kustomize
 
-      - name: Validate all manifests
-        run: |
-          kubeconform \
+      - name: Validate manifests
+        # Uses official kubeconform Docker container with pinned tag. 
+        uses: docker://ghcr.io/yannh/kubeconform:v0.8.0
+        with:
+          entrypoint: /kubeconform
+          args: >-
             -strict \
             -summary \
-            rendered/**/*.yaml
+            rendered/kustomize/*.yaml
+
+      # - name: Validate all manifests
+      #   run: |
+      #     kubeconform \
+      #       -strict \
+      #       -summary \
+      #       rendered/**/*.yaml
 
   kube-linter:
       name: KubeLinter
       runs-on: ubuntu-latest
 
       needs:
-        - helm
-        - kustomize
+        # - helm-render
+        - kustomize-render
 
       steps:
-        - name: Download Helm manifests
-          uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
-          with:
-            name: helm-rendered
-            path: rendered/helm
+        # - name: Download Helm manifests
+        #   uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        #   with:
+        #     name: helm-rendered
+        #     path: rendered/helm
 
         - name: Download Kustomize manifests
           uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -166,6 +178,7 @@ jobs:
             path: rendered/kustomize
 
         - name: Run KubeLinter
+          # Pinned kube-linter-action uses kube-linter v.1.0.7
           uses: stackrox/kube-linter-action@87802a2f4e01abebb3ee3c67a3002fea71f6eae5
           with:
             directory: rendered
@@ -176,14 +189,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Validate Argo CD Manifests
-        run: |
-          kubeconform \
-          -strict \
-          -summary \
-          -schema-location default \
-          -schema-location 'schemas/{{.ResourceKind}}{{.KindSuffix}}.json' \
-          applications/ \
-          applicationsets/ \
-          projects/
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
+      - name: Validate manifests
+        uses: docker://ghcr.io/yannh/kubeconform:v0.8.0
+        with:
+          entrypoint: /kubeconform
+          args: >-
+            -strict \
+            -summary \
+            -schema-location default \
+            -schema-location 'schemas/{{.ResourceKind}}{{.KindSuffix}}.json' \
+            applications/ \
+            bootstrap/ \
+            clusters/ \
+            projects/
+
+      # - name: Validate Argo CD Manifests
+      #   run: |
+      #     kubeconform \
+      #     -strict \
+      #     -summary \
+      #     -schema-location default \
+      #     -schema-location 'schemas/{{.ResourceKind}}{{.KindSuffix}}.json' \
+      #     applications/ \
+      #     bootstrap/ \
+      #     clusters/ \
+      #     projects/
