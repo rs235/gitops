@@ -76,7 +76,7 @@ jobs:
       - name: Render manifests
         run: |
           ls -lah
-          kubectl kustomize applications/workloads/website > rendered/kustomize/website.yaml
+          kubectl kustomize applications/workloads/website > rendered/kustomize/website.yml
 
       - name: Upload rendered manifests
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -108,8 +108,8 @@ jobs:
   #     - name: Render Helm chart
   #       run: |
   #         helm template my-app ./charts/my-app \
-  #           --values ./charts/my-app/values.yaml \
-  #           > rendered/helm/my-app.yaml
+  #           --values ./charts/my-app/values.yml \
+  #           > rendered/helm/my-app.yml
 
   #     - name: Upload rendered manifests
   #       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -141,6 +141,11 @@ jobs:
           name: kustomize-rendered
           path: rendered/kustomize
 
+      - name: Debug rendered manifests
+        run: |
+          pwd
+          find rendered -type f -print
+
       - name: Validate manifests
         # Uses official kubeconform Docker container with pinned tag.
         uses: docker://ghcr.io/yannh/kubeconform:v0.8.0
@@ -149,14 +154,14 @@ jobs:
           args: >-
             -strict
             -summary
-            rendered/kustomize/*.yaml
+            rendered/kustomize/*.yml
 
       # - name: Validate all manifests
       #   run: |
       #     kubeconform \
       #       -strict \
       #       -summary \
-      #       rendered/**/*.yaml
+      #       rendered/**/*.yml
 
   kube-linter:
     name: KubeLinter
