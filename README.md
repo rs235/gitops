@@ -166,13 +166,6 @@ flowchart LR
 
 **Manifest Validation** - Kubernetes and Argo CD manifests are validated by **Kubeconform**. Argo CD validation is done with official Argo CD CRDs converted to Kubeconform supported JSON format. 
 
-``` mermaid
-flowchart LR
-    A[Official Argo CD CRD YAML]
-    -->|Convert CRD schemas| B[openapi2jsonschema-go]
-    -->|Generate JSON Schema| C[Kubeconform-compatible JSON Schema]
-```
-
 **Best Practices Scan** - Rendered kustomize files are scanned by KubeLinter to detect misconfiguation and best practice violations.
 
 ## Future improvements
