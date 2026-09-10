@@ -57,7 +57,7 @@ This repository utilises **App of Apps** pattern and offers support for multiple
 config:
   theme: redux
 ---
-flowchart TB
+flowchart LR
     n1["Git repository"] --> n2["Root application"]
     n2 --> n3["Cluster applications"]
     n3 --> n4["Platform services"] & n5["Application workloads"]
