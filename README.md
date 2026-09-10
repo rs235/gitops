@@ -1,8 +1,8 @@
 # Overview
 
-GitOps repository for managing Kubernetes workloads with Argo CD. This repository is built around App of Apps concepts and support for multiple clusters while still keeping things simple and manageable. Security was a major concern with separation of platform components and application workloads and minimal permissions based on actual application needs.
+Argo CD GitOps repository built using App of Apps pattern with support for multi cluster setups and strong focus on simplicity, manageablility and security. Principle of least priviledge was a leading factor in a design of Argo CD Projects and Kubernetes deployments.
 
-This repository is a part of a bigger infrastructure as code project that uses:
+This repository is a part of a bigger infrastructure as code project built with:
 
 - **Terraform** to provision and manage infrastructure.
 - **Ansible** to configure VMs and execute Kubespray.
@@ -14,121 +14,78 @@ This repository is a part of a bigger infrastructure as code project that uses:
 
 ```text
 .
-├── apps/
-│   └── nginx/
-│       ├── base/
-│       │   ├── deployment.yaml
-│       │   ├── service.yaml
-│       │   └── kustomization.yaml
-│       └── overlays/
-│           ├── home/
-│           │   └── kustomization.yaml
-│           └── aws/
-│               └── kustomization.yaml
-│
-├── argocd/
-│   └── projects/
-│       ├── apps.yaml
-│       └── platform.yaml
-│
-├── bootstrap/
-│   └── root-app.yaml
-│
-├── clusters/
-│   ├── home/
-│   │   ├── kustomization.yaml
-│   │   ├── platform.yaml
-│   │   └── apps.yaml
-│   └── aws/
-│       ├── kustomization.yaml
-│       ├── platform.yaml
-│       └── apps.yaml
-│
-└── platform/
-    └── monitoring/
-        ├── application.yaml
-        └── values.yaml
+├── applications  # Contains Kubernetes manifests and additional configuration files if needed.
+│   ├── platform
+│   │   └── kube-prometheus-stack
+│   │       └── values.yml
+│   └── workloads
+│       └── website
+│           ├── deployment.yml
+│           ├── kustomization.yml
+│           └── service.yml
+├── bootstrap  # Argo CD bootstrap applications. Applied manually on fresh cluster installation.
+│   ├── argocd.yml
+│   ├── root-aws.yml
+│   └── root-home.yml
+├── clusters  # Defines cluster specific configuration.
+│   ├── aws
+│   │   ├── argocd-projects.yml
+│   │   ├── kube-prometheus-stack.yml
+│   │   └── website.yml
+│   └── home
+│       ├── argocd-projects.yml
+│       ├── kube-prometheus-stack.yml
+│       └── website.yml
+├── projects  # Argo CD Project manifests. 
+│   ├── apps.yml
+│   ├── argocd.yml
+│   ├── platform.yml
+│   └── root.yml
+├── README.md
+└── schemas  # Kubernetes Custom Resource Definitions (CRD) for Argo CD manifests. Used in Actions by kubeconform.
+    ├── application.json
+    ├── applicationset.json
+    └── appproject.json
 ```
 
-## GitOps architecture
+## Architecture
 
-The repository uses the **App of Apps** pattern.
+This repository utilises **App of Apps** pattern and offers support for multiple clusters.
 
-```text
-                    Git repository
-                         │
-                         │
-                  bootstrap/root-app
-                         │
-                         ▼
-                  clusters/<cluster>
-                         │
-              ┌──────────┴──────────┐
-              │                     │
-              ▼                     ▼
-        platform Application   apps Application
-              │                     │
-              ▼                     ▼
-       platform/* resources    apps/* resources
+```mermaid
+---
+config:
+  theme: redux
+---
+flowchart TB
+    n1["Git repository"] --> n2["Root application"]
+    n2 --> n3["Cluster applications"]
+    n3 --> n4["Platform services"] & n5["Application workloads"]
+
+     n1:::Sky
+     n2:::Sky
+     n3:::Sky
+     n4:::Sky
+     n5:::Sky
+     classDef Sky stroke-width:1px, stroke-dasharray:none, stroke:#374D7C, fill:#E2EBFF, color:#374D7C
 ```
 
-For the `home` cluster:
+#### App of Apps pattern 
 
-```text
-root-app
-  └── clusters/home
-        ├── platform
-        │     └── kube-prometheus-stack
-        └── apps
-              └── nginx
-```
+App of Apps allows for automated deployment and configuration of cluster resources with a ***Git repository as a single source of truth***. Continuous repository scans and cluster state comparisons detect configuration drift and trigger reconciliation steps for ensuring parity between repository held configuration and actual state of deployment.
 
-The important distinction is:
+#### Multi-cluster model
 
-- `clusters/` describes **what is enabled on a particular cluster**.
-- `platform/` contains shared platform components.
-- `apps/` contains workload definitions.
-- `argocd/projects/` contains Argo CD authorization boundaries.
-- `bootstrap/` contains the one-time bootstrap manifest.
+This repository assumes that each Kubernetes cluster has its own Argo CD instance and its own root Application. This design choice was made to avoid one central Argo CD instance that manages many remote clusters. This architectural choice aligns with project goal of creating a simple, manageable and secure GitOps setup. Decentralised cluster management minimises potential blast radius of Argo CD or cluster downtime and increases security by eliminating a need for shared cluster credentials while only marginally increasing maintenance cost.
 
-## Multi-cluster model
+<!-- #### Bootstrap
 
-Each Kubernetes cluster has its own Argo CD instance and its own root Application.
+For this project Argo CD installation is done by Kubespray as part of the infrastructure provisioning managed by the IaC project: **LINK**
 
-This is deliberately simpler than operating one central Argo CD instance that manages many remote clusters.
-
-For example:
-
-```text
-Cluster: home
-  Argo CD
-    └── root-app -> clusters/home
-
-Cluster: aws
-  Argo CD
-    └── root-app -> clusters/aws
-```
-
-Both clusters can use the same application base while selecting different overlays.
-
-This gives us:
-
-- clear cluster ownership
-- no cross-cluster Argo CD credentials
-- no manually maintained remote-cluster registration
-- simple failure isolation
-- an easy path to add more clusters later
-
-If the project grows into a centralized multi-cluster platform, **ApplicationSet** and Argo CD cluster registration can be introduced later. They are intentionally not required here.
-
-## Bootstrap
-
-Argo CD itself is installed by the Kubernetes bootstrap process (Kubespray in this project).
-
-The only manual GitOps bootstrap step is applying the root Application:
+The only manual bootstrap step is applying the cluster specific root Application:
 
 ```bash
-kubectl apply -f bootstrap/root-app.yaml
+kubectl apply -f bootstrap/root-<cluster>.yml
 ```
 
 After that, Argo CD takes ownership of the repository's desired state.
@@ -140,258 +97,69 @@ kubectl -n argocd get applications
 kubectl -n argocd get appprojects
 ```
 
-The root Application should create the cluster-level child Applications.
+The root Application then creates cluster-level child Applications. -->
 
-For another cluster, apply that cluster's root Application after changing its `path`:
+## CI/CD
 
-```text
-clusters/home
+This project has a fairly simple but pretty powerful CI pipeline built on top of GitHub Actions that is triggered automatically on new pull request.
+
+The responsibility of this pipeline is restricted to code validation and security checks while Argo CD handles deployment.
+
+#### CI workflow
+
+``` mermaid
+flowchart LR
+    trigger["Pull Request"]
+
+    trigger --> yamllint
+    trigger --> gitleaks
+    trigger --> trivy
+    trigger --> kustomize
+    trigger --> argocd
+
+    subgraph yamllint["YAML Linter"]
+        direction LR
+        y1["Checkout"] --> y2["Install yamllint"] --> y3["Run yamllint"]
+    end
+
+    subgraph gitleaks["Gitleaks"]
+        direction LR
+        g1["Checkout<br/>fetch-depth: 0"] --> g2["Run Gitleaks"]
+    end
+
+    subgraph trivy["Trivy"]
+        direction LR
+        t1["Checkout"] --> t2["Run Trivy<br/>config scan<br/>HIGH, CRITICAL"]
+    end
+
+    subgraph kustomize["Kustomize Render"]
+        direction LR
+        k1["Checkout"] --> k2["Set up kubectl<br/>v1.35.4"] --> k3["Create directory<br/>rendered/kustomize"] --> k4["Render manifests<br/>kubectl kustomize"] --> k5["Upload rendered manifests<br/>kustomize-rendered"]
+    end
+
+    subgraph kubeconform["Kubernetes Schema Validation"]
+        direction LR
+        kc1["Download Kustomize manifests"] --> kc2["Debug rendered manifests"] --> kc3["Validate manifests<br/>kubeconform v0.8.0"]
+    end
+
+    subgraph kubelinter["KubeLinter"]
+        direction LR
+        kl1["Download Kustomize manifests"] --> kl2["Run KubeLinter<br/>directory: rendered"]
+    end
+
+    subgraph argocd["Argo CD Schema Validation"]
+        direction LR
+        a1["Checkout"] --> a2["Validate manifests<br/>kubeconform v0.8.0"]
+    end
+
+    kustomize --> kubeconform
+    kustomize --> kubelinter
 ```
 
-to:
 
-```text
-clusters/aws
-```
+## Future improvements
 
-A cleaner operational approach is to keep one small bootstrap file per cluster if different clusters are bootstrapped independently.
-
-## Adding an application
-
-1. Create the application's manifests under `apps/<name>/`.
-2. Add a base if the application has reusable Kubernetes resources.
-3. Add cluster overlays only when cluster-specific differences are needed.
-4. Add an Argo CD `Application` under the appropriate `clusters/<cluster>/` directory.
-5. Add the Application to that cluster's `kustomization.yaml`.
-6. Commit and push.
-
-Example:
-
-```text
-apps/
-└── whoami/
-    ├── base/
-    └── overlays/
-        └── home/
-```
-
-Then create:
-
-```text
-clusters/home/apps.yaml
-```
-
-with an Application pointing to:
-
-```text
-apps/whoami/overlays/home
-```
-
-Argo CD detects the Git change and synchronizes it.
-
-## Platform applications
-
-Platform applications are things the cluster needs to operate, rather than user workloads.
-
-Examples:
-
-- monitoring
-- ingress controller
-- cert-manager
-- external-dns
-- storage components
-
-Third-party Helm charts should normally be deployed through an Argo CD `Application`.
-
-For example, kube-prometheus-stack is represented by:
-
-```text
-platform/monitoring/application.yaml
-platform/monitoring/values.yaml
-```
-
-The Helm chart itself is not copied into this repository.
-
-## Application Projects
-
-Two projects are intentionally used:
-
-### `platform`
-
-Used for cluster/platform components.
-
-### `apps`
-
-Used for workloads deployed into application namespaces.
-
-The projects provide a basic security boundary and make the repository structure clearer.
-
-The permissions are intentionally broad enough for a learning/home-lab Kubernetes platform. In a production environment, these should be tightened to the minimum required resources and namespaces.
-
-## Kustomize
-
-Kustomize is used only where it provides a real benefit.
-
-The nginx application has:
-
-```text
-base/
-```
-
-for common manifests and:
-
-```text
-overlays/home/
-overlays/aws/
-```
-
-for cluster-specific differences.
-
-Do not create an overlay for every application automatically. If an application is identical on every cluster, point the Application directly at its base.
-
-## Helm
-
-Helm is preferred for third-party software that is already distributed as a Helm chart.
-
-The repository stores:
-
-- the Argo CD Application
-- Helm values
-
-It does not store rendered Helm manifests.
-
-This keeps upgrades straightforward: change the chart version or values, commit, and let Argo CD reconcile.
-
-## Secrets
-
-Do **not** commit plaintext Kubernetes Secrets containing passwords, API keys, tokens, or private keys.
-
-For a future production-oriented version, use one of:
-
-- SOPS + age
-- External Secrets Operator
-- a cloud secret manager
-- another dedicated secret-management solution
-
-For the current project, keeping secrets out of Git is sufficient.
-
-## What belongs where?
-
-| Directory | Purpose |
-|---|---|
-| `bootstrap/` | One-time Argo CD bootstrap |
-| `clusters/` | Cluster-specific desired state and enabled applications |
-| `argocd/projects/` | Argo CD AppProjects |
-| `apps/` | Application workload manifests |
-| `platform/` | Cluster/platform services |
-
-A useful rule is:
-
-> `clusters/` decides **what runs where**.  
-> `apps/` and `platform/` define **how it runs**.
-
-## CI/CD responsibility
-
-GitHub Actions should validate changes before they reach the cluster.
-
-A sensible next step is a workflow that runs on pull requests and performs:
-
-```text
-yamllint
-kustomize build
-kubectl apply --dry-run=client
-```
-
-Argo CD remains responsible for deployment.
-
-GitHub Actions should **not** run `kubectl apply` for normal application deployments. That would duplicate the deployment mechanism and weaken the GitOps model.
-
-The desired flow is:
-
-```text
-Developer
-   │
-   ▼
-Git commit / Pull Request
-   │
-   ▼
-GitHub Actions
-   │
-   ├── YAML validation
-   ├── Kustomize validation
-   └── manifest checks
-   │
-   ▼
-Merge to main
-   │
-   ▼
-Argo CD
-   │
-   ▼
-Kubernetes
-```
-
-## Bootstrap vs continuous deployment
-
-There is deliberately a small bootstrap exception to GitOps.
-
-### Bootstrap
-
-Performed once:
-
-```bash
-kubectl apply -f bootstrap/root-app.yaml
-```
-
-### Continuous operation
-
-After bootstrap:
-
-```text
-Git
- ↓
-Argo CD
- ↓
-Kubernetes
-```
-
-This is normal for an App of Apps setup. Something must initially tell Argo CD which Git path to watch.
-
-## Design goals
-
-This repository intentionally avoids:
-
-- unnecessary ApplicationSets
-- deeply nested App of Apps
-- generated YAML
-- excessive Kustomize overlays
-- a central cluster-management abstraction
-- copying third-party Helm charts into Git
-- GitHub Actions performing deployments
-
-Those features can be introduced when the project actually needs them.
-
-The goal is a repository that is:
-
-- easy to understand
-- reproducible
-- reviewable
-- extensible
-- suitable for a junior DevOps/GitOps portfolio
-- close enough to real operational patterns to discuss in an interview
-
-## Interview / CV talking points
-
-This project demonstrates:
-
-- Infrastructure as Code with Terraform
-- configuration management with Ansible
-- Kubernetes provisioning with Kubespray
-- GitOps with Argo CD
-- App of Apps
-- Kustomize bases and overlays
-- Helm-based third-party application deployment
-- Kubernetes namespaces and resource ownership
-- declarative reconciliation
-- CI validation with GitHub Actions
-- multi-cluster repository organization
+1. ApplicationSets for multi cluster configurations.
+2. Expanded applications list making better use of the cluster.
+3. Inclusion of Helm charts.
+4. Documentation improvements.
