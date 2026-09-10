@@ -103,7 +103,7 @@ The root Application then creates cluster-level child Applications. -->
 
 This project has a fairly simple but pretty powerful CI pipeline built on top of GitHub Actions that is triggered automatically on new pull request.
 
-The responsibility of this pipeline is restricted to code validation and security checks while Argo CD handles deployment.
+The responsibility of this pipeline is restricted to code validation and security checks while deployment is handled by Argo CD.
 
 #### CI workflow
 
@@ -156,6 +156,24 @@ flowchart LR
     kustomize --> kubelinter
 ```
 
+**YAML Linter** - This step uses **yamllint** version 1.38.0 to recursively scan all YAML files in the repository and report any discovered YAML formatting errors.
+
+**Secrets Scan** - **Gitleaks** is used to scan all files in the repository for potential unsecured credentials.
+
+**Security Scan** - Repo security is assessed by Trivy in misconfioguration scanning mode. This scan is restricted to repo files only with no access to Kubernetes cluster.
+
+**Kustomize Render** - Kustomize file file validity is confirmed by **kubectl kustomize** render. Rendered manifests are then uploaded as a GitHub Artifact for further validation by Kubeconform and KubeLinter.
+
+**Manifest Validation** - Kubernetes and Argo CD manifests are validated by **Kubeconform**. Argo CD validation is done with official Argo CD CRDs converted to Kubeconform supported JSON format. 
+
+``` mermaid
+flowchart LR
+    A[Official Argo CD CRD YAML]
+    -->|Convert CRD schemas| B[openapi2jsonschema-go]
+    -->|Generate JSON Schema| C[Kubeconform-compatible JSON Schema]
+```
+
+**Best Practices Scan** - Rendered kustomize files are scanned by KubeLinter to detect misconfiguation and best practice violations.
 
 ## Future improvements
 
