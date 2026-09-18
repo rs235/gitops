@@ -36,7 +36,7 @@ spec:
 
       containers:
         - name: nginx
-          image: nginxinc/nginx-unprivileged:1.31
+          image: rs235/website:latest
 
           resources:
             requests:
@@ -59,9 +59,7 @@ spec:
 
           ports:
             - name: http
-              containerPort: 80
-            - name: https
-              containerPort: 443
+              containerPort: 8080
 
       volumes:
         - name: tmp
