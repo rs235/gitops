@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - deployment.yml
   - service.yml
+  - policy.yml
 
 namespace: website
 
